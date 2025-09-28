@@ -272,7 +272,7 @@ else:
                                     "content": prompt,
                                 }
                             ],
-                            model="llama3-8b-8192",
+                            model="llama-3.3-70b-versatile",
                         )
                         
                         # 5. Display the report
@@ -280,3 +280,4 @@ else:
 
                 except Exception as e:
                     st.error(f"An error occurred while generating the report: {e}")
+
