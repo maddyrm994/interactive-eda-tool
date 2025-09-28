@@ -4,7 +4,7 @@ import numpy as np
 import plotly.express as px
 import seaborn as sns
 import matplotlib.pyplot as plt
-import google.generativeai as genai # <-- Updated import
+
 import os
 import io
 
@@ -224,27 +224,27 @@ else:
                         st.pyplot(pair_plot_fig)
                     else: st.error("Please select at least two columns.")
 
-    # --- 4. GENERATE EDA REPORT (GEMINI VERSION) ---
+    # --- 4. GENERATE EDA REPORT (GROQ VERSION) ---
     elif app_mode == "Generate EDA Report":
-        st.header("4. Generate Comprehensive EDA Report")
+        st.header("4. Generate Comprehensive EDA Report with Groq")
+
+        st.info("To get your Groq API key, visit the [Groq Console](https://console.groq.com/keys).")
+        groq_api_key = st.text_input("Enter your Groq API Key", type="password")
 
         if st.button("Generate Report"):
-            try:
-                # Check for API key
-                if "GOOGLE_API_KEY" not in st.secrets:
-                    st.error("Google API key not found. Please add it to your Streamlit secrets (`.streamlit/secrets.toml`).")
-                else:
-                    with st.spinner("AI is analyzing the data and writing the report... This may take a moment."):
-                        # 1. Configure the Gemini API client
-                        genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
+            if not groq_api_key:
+                st.warning("Please enter your Groq API key to generate the report.")
+            else:
+                try:
+                    with st.spinner("Groq is analyzing the data and writing the report... This may take a moment."):
+                        # 1. Initialize the Groq client
+                        from groq import Groq
+                        client = Groq(api_key=groq_api_key)
                         
-                        # 2. Initialize the model
-                        model = genai.GenerativeModel('gemini-1.5-flash')
-
-                        # 3. Get Data Summary
+                        # 2. Get Data Summary
                         eda_summary = get_summary(df)
 
-                        # 4. Create a prompt for the AI
+                        # 3. Create a prompt for the AI
                         prompt = f"""
                         You are an expert data analyst. Your task is to generate a comprehensive Exploratory Data Analysis (EDA) report based on the provided data summary.
 
@@ -264,11 +264,19 @@ else:
                         ---
                         """
 
-                        # 5. Call the Gemini API
-                        response = model.generate_content(prompt)
+                        # 4. Call the Groq API
+                        chat_completion = client.chat.completions.create(
+                            messages=[
+                                {
+                                    "role": "user",
+                                    "content": prompt,
+                                }
+                            ],
+                            model="llama3-8b-8192",
+                        )
                         
-                        # 6. Display the report
-                        st.markdown(response.text)
+                        # 5. Display the report
+                        st.markdown(chat_completion.choices[0].message.content)
 
-            except Exception as e:
-                st.error(f"An error occurred while generating the report: {e}")
+                except Exception as e:
+                    st.error(f"An error occurred while generating the report: {e}")
