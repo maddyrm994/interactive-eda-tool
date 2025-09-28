@@ -4,4 +4,4 @@ numpy
 plotly
 seaborn
 openpyxl
-google-generativeai
+groq
